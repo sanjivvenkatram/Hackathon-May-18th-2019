@@ -1,0 +1,89 @@
+#include <AZ3166WiFi.h>
+#include <http_client.h>
+
+char ssid[] = "";    // your network SSID (name)
+char password[] = "";                 // your network password
+int status = WL_IDLE_STATUS;    // the Wifi radio's status
+
+void setup() {
+    // Initialize serial and wait for port to open
+    Serial.begin(15200);
+    
+    // Check for the presence of the shield:
+    if (WiFi.status() == WL_NO_SHIELD) {
+        Serial.println("WiFi shield not present");
+        // Don't continue:
+        while (true);
+    }
+    
+    const char* fv = WiFi.firmwareVersion();
+    Serial.printf("Wi-Fi firmware: %s\r\n", fv);
+    
+    // attempt to connect to Wifi network:
+    while (status != WL_CONNECTED) {
+        Serial.print("Attempting to connect to WPA SSID: ");
+        Serial.println(ssid);
+        // Connect to WPA/WPA2 network:
+        status = WiFi.begin(ssid, password);
+        // Wait 10 seconds for connection:
+        delay(5000);
+    }
+    
+    Serial.print("You're connected to the network");
+    printWifiData();
+}
+
+void loop() {
+    // check the network connection once every 10 seconds:
+    delay(500);
+    //Run Motor Code
+    SetupConnection();
+}
+
+void printWifiData() {
+    // print your WiFi shield's IP address:
+    IPAddress ip = WiFi.localIP();
+    Serial.print("IP Address: ");
+    Serial.println(ip);
+    Serial.println(ip);
+    Screen.print("MICROSOFT");
+    
+    // print your MAC address:
+    byte mac[6];
+    WiFi.macAddress(mac);
+    Serial.printf("MAC address: %02x:%02x:%02x:%02x:%02x:%02x\r\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+int pwmPin = 19;
+int IN1 = 16;
+int IN2 = 20;
+ 
+void UpdateMotor(const char* x) {
+int y = atoi(x);
+analogWrite(pwmPin, y);
+  Screen.print("PWM Value:", false);
+  Screen.print(x);
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+}
+
+int SetupConnection()
+{
+  HTTPClient *httpClient = new HTTPClient(HTTP_GET, "enter your webaddress here");
+  const Http_Response* result = httpClient->send();
+
+  if (result == NULL)
+  {
+    Screen.print(1, "Failed");
+  }
+  else
+  {
+    Screen.print(1, "Succeed");    
+    Screen.print("Body");
+    Screen.print(result->body);
+    int x = (int)result->body;
+    UpdateMotor(result->body);
+  }
+
+  delete httpClient;
+}
